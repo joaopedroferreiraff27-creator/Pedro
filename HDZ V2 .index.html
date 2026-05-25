@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HZD V2 - Edição Definitiva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { margin: 0; padding: 0; background-color: #0b0f19; color: #ffffff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .game-card { text-align: center; background: linear-gradient(135deg, #111827 0%, #1f2937 100%); padding: 25px; border-radius: 16px; box-shadow: 0 0 25px rgba(0, 255, 200, 0.25); border: 2px solid #00ffc8; width: 95%; max-width: 500px; box-sizing: border-box; transition: max-width 0.3s ease; position: relative; }
+        .game-card.modo-versus-ativo { max-width: 850px; padding: 15px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        h1 { font-size: 2.8rem; margin-bottom: 20px; color: #00ffc8; text-shadow: 0 0 12px rgba(0, 255, 200, 0.6); letter-spacing: 3px; }
+        h2 { font-size: 1.8rem; color: #00ffc8; margin-top: 0; text-shadow: 0 0 8px rgba(0, 255, 200, 0.4); }
+        h3 { margin: 0 0 10px 0; font-size: 1.2rem; }
+        
+        .menu-btn, .action-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; font-size: 1.05rem; font-weight: bold; color: #0b0f19; background-color: #00ffc8; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0, 255, 200, 0.2); }
+        .action-btn:active, .menu-btn:active { transform: scale(0.97); }
+        
+        .btn-ataque { background-color: #ff4a5a; color: white; box-shadow: 0 4px 10px rgba(255, 74, 90, 0.3); }
+        .btn-defesa { background-color: #3b82f6; color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+        .btn-esquiva { background-color: #eab308; color: #0b0f19; box-shadow: 0 4px 10px rgba(234, 179, 8, 0.3); }
+        .btn-cenario { background-color: #a855f7; color: white; display: none; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3); }
+        .btn-especial { background-color: #f97316; color: white; display: none; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3); }
+        .btn-secundario { background-color: #4b5563; color: white; box-shadow: none; }
+        
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.95rem; color: #9ca3af; }
+        .form-control { width: 100%; padding: 12px; background-color: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: white; font-size: 1rem; box-sizing: border-box; }
+        
+        .status-box { background: rgba(17, 24, 39, 0.8); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #374151; text-align: left; }
+        .bar-container { background-color: #374151; border-radius: 10px; margin: 6px 0; height: 16px; overflow: hidden; border: 1px solid #1f2937; }
+        .bar { height: 100%; width: 100%; transition: width 0.3s ease; }
+        .hp-bar { background: linear-gradient(90deg, #10b981, #059669); }
+        .def-bar { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .stamina-bar { background: linear-gradient(90deg, #eab308, #ca8a04); }
+        .sp-bar { background: linear-gradient(90deg, #f59e0b, #d97706); width: 0%; }
+        
+        #log { background: #030712; padding: 12px; border-radius: 8px; height: 110px; overflow-y: auto; font-size: 0.9rem; text-align: left; margin-bottom: 12px; color: #00ffc8; border: 1px solid #1f2937; }
+        .hub-info { background: rgba(17, 24, 39, 0.8); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: left; border: 1px solid #374151; }
+        .style-item { display: flex; justify-content: space-between; align-items: center; background: #1f2937; padding: 10px; margin: 6px 0; border-radius: 6px; border-left: 4px solid #4b5563; font-size: 0.9rem; }
+        .style-item.equipped { background: rgba(0, 255, 200, 0.1); }
+        .style-select-btn { background: #00ffc8; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem; color: #0b0f19;}
+        
+        .dialogue-box { background: #030712; border: 2px dashed #eab308; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left; }
+        .dialogue-speaker { color: #ff4a5a; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; text-transform: uppercase; }
+        .dialogue-text { font-style: italic; color: #e5e7eb; font-size: 1.05rem; line-height: 1.4; }
+        
+        /* VERSUS LAYOUT */
+        .char-selection-container { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
+        .select-box { flex: 1; background: rgba(17, 24, 39, 0.8); padding: 15px; border-radius: 12px; border: 1px solid #374151; text-align: left; }
+        .select-box.p1-box { border-left: 4px solid #3b82f6; }
+        .select-box.p2-box { border-right: 4px solid #ff4a5a; }
+        
+        .arena-container { display: flex; justify-content: space-between; gap: 15px; }
+        .player-side { flex: 1; background: rgba(17, 24, 39, 0.6); padding: 10px; border-radius: 12px; border: 1px solid #374151; display: flex; flex-direction: column; justify-content: space-between; }
+        .grid-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .grid-acoes .action-btn { margin: 0; padding: 10px 4px; font-size: 0.8rem; }
+        
+        .center-area { width: 260px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+        #log-versus { background: #030712; padding: 10px; border-radius: 8px; height: 95px; overflow-y: auto; font-size: 0.75rem; text-align: left; color: #00ffc8; border: 1px solid #1f2937; }
+        
+        /* OVERLAY DE BALÃO DE DIÁLOGO INTERATIVO */
+        .speech-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.85); display: none; justify-content: center; align-items: center; z-index: 999; cursor: pointer; }
+        .speech-bubble-card { background: #111827; border: 3px solid #ff4a5a; padding: 25px; border-radius: 16px; box-shadow: 0 0 30px rgba(255, 74, 90, 0.4); text-align: center; max-width: 400px; width: 85%; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .speech-bubble-card.p1-color { border-color: #3b82f6; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); }
+        .speech-author { font-size: 1.2rem; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; color: #ff4a5a; letter-spacing: 1px; }
+        .speech-bubble-card.p1-color .speech-author { color: #3b82f6; }
+        .speech-msg { font-size: 1.15rem; font-style: italic; color: #f3f4f6; margin-bottom: 15px; line-height: 1.4; }
+        .speech-hint { font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; animation: pulse 1.5s infinite; }
+        
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 7, 18, 0.95); display: none; justify-content: center; align-items: center; z-index: 10; }
+        .modal-content { background: #111827; padding: 30px; border-radius: 16px; border: 2px solid #00ffc8; width: 85%; max-width: 440px; text-align: center; max-height: 85vh; overflow-y: auto; }
+
+        /* ABAS DO INVENTÁRIO */
+        .tabs-container { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; min-width: 75px; padding: 8px 4px; background: #1f2937; border: 1px solid #4b5563; color: #9ca3af; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+        .tab-btn.active { background: #00ffc8; color: #0b0f19; border-color: #00ffc8; }
+        .tab-content { display: none; max-height: 150px; overflow-y: auto; }
+        .tab-content.active { display: block; }
+
+        /* === SISTEMA DE ATUALIZAÇÃO DE RARIDADES (CASA BORDA + TEXTO) === */
+        .raridade-comum {
+            border-left: 4px solid #94a3b8 !important;
+            box-shadow: inset 0 0 10px rgba(148, 163, 184, 0.1);
+        }
+        .raridade-comum strong, .rarity-comum { color: #cbd5e1 !important; }
+
+        .raridade-rara {
+            border-left: 4px solid #3b82f6 !important;
+            box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.15);
+        }
+        .raridade-rara strong, .rarity-rara { color: #60a5fa !important; }
+
+        .raridade-epica {
+            border-left: 4px solid #a855f7 !important;
+            box-shadow: inset 0 0 10px rgba(168, 85, 247, 0.2);
+        }
+        .raridade-epica strong, .rarity-epica { color: #c084fc !important; }
+
+        .raridade-mitica {
+            border-left: 4px solid #f97316 !important;
+            box-shadow: inset 0 0 12px rgba(249, 115, 22, 0.25);
+        }
+        .raridade-mitica strong, .rarity-mitica { 
+            color: #fb923c !important; 
+            text-shadow: 0 0 5px rgba(249, 115, 22, 0.4);
+        }
+
+        .changelog-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #00ffc8; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s, text-shadow 0.2s; }
+        .changelog-btn:hover { text-shadow: 0 0 8px #00ffc8; transform: scale(1.1); }
+        .changelog-btn i { animation: spin-slow 12s linear infinite; }
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+        
+        /* BOTÃO DE AJUDA COLOQUER SUPERIOR ESQUERDO */
+        .help-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: none; color: #eab308; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s, text-shadow 0.2s; }
+        .help-btn:hover { text-shadow: 0 0 8px #eab308; transform: scale(1.1); }
+
+        .changelog-box { text-align: left; margin-top: 15px; background: #030712; padding: 15px; border-radius: 10px; border: 1px solid #1f2937; }
+        .changelog-header-modal { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #00ffc8; padding-bottom: 8px; margin-bottom: 12px; }
+        .changelog-version-badge { background-color: #ff4a5a; color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; }
+        .changelog-ul { padding-left: 18px; margin: 0; color: #d1d5db; font-size: 0.9rem; }
+        .changelog-ul li { margin-bottom: 8px; line-height: 1.4; }
+
+        /* ESTILOS DO GUIA TUTORIAL */
+        .guide-section { margin-bottom: 15px; text-align: left; }
+        .guide-title { font-weight: bold; color: #00ffc8; font-size: 1rem; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+        .guide-text { font-size: 0.88rem; color: #d1d5db; line-height: 1.4; margin: 0 0 5px 0; }
+
+        /* MARCADOR DE POÇÃO ATIVA */
+        .badge-sorte { background-color: #f59e0b; color: #0b0f19; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-left: 5px; animation: pulse 2s infinite; }
+    </style>
+</head>
+<body onload="verificarSaveExistente()">
+    <div id="main-card" class="game-card">
+        <button class="help-btn" title="Como Jogar" onclick="abrirGuiaTutorial()"><i class="fa-solid fa-circle-question"></i></button>
+        <button class="changelog-btn" title="Notas de Atualização" onclick="abrirChangelog()"><i class="fa-solid fa-gear"></i></button>
+
+        <div id="screen-menu" class="screen active">
+            <h1>HZD V2</h1>
+            <button id="btn-continuar" class="menu-btn" style="background-color: #eab308; color: #0b0f19; display: none;" onclick="carregarJogo()">Continuar Jornada</button>
+            <button class="menu-btn" onclick="irParaSelecaoRapida()">Luta Rápida</button>
+            <button class="menu-btn" onclick="mostrarCadastroVencedor()">Seja um Vencedor (30 Níveis)</button>
+            <button class="menu-btn" style="background-color: #3b82f6; color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);" onclick="irParaSelecaoVersus()">Modo Versus 1v1 (Local)</button>
+        </div>
+
+        <div id="screen-selecao-rapida" class="screen">
+            <h2>LUTA RÁPIDA - CONFIGURAÇÃO</h2>
+            <div class="char-selection-container">
+                <div class="select-box p1-box">
+                    <h3 style="color: #3b82f6;">SEU LUTADOR</h3>
+                    <label>Estilo:</label>
+                    <select id="r-p1-style" class="form-control"></select>
+                    <label style="display:block; margin-top:10px;">Luva:</label>
+                    <select id="r-p1-glove" class="form-control"></select>
+                </div>
+                <div class="select-box p2-box">
+                    <h3 style="color: #ff4a5a;">ADVERSÁRIO</h3>
+                    <label>Estilo:</label>
+                    <select id="r-p2-style" class="form-control"></select>
+                    <label style="display:block; margin-top:10px;">Luva:</label>
+                    <select id="r-p2-glove" class="form-control"></select>
+                </div>
+            </div>
+            <button class="menu-btn" onclick="confirmarLutaRapida()">INICIAR COMBATE</button>
+            <button class="menu-btn btn-secundario" onclick="voltarParaMenuGeral()">Voltar</button>
+        </div>
+
+        <div id="screen-selecao-versus" class="screen">
+            <h2>VERSUS - ESCOLHA DE ESTILOS</h2>
+            <div class="char-selection-container">
+                <div class="select-box p1-box">
+                    <h3 style="color: #3b82f6;">JOGADOR 1</h3>
+                    <label>Nome:</label>
+                    <input type="text" id="v-p1-input" class="form-control" value="Player 1">
+                    <label style="display:block; margin-top:10px;">Estilo:</label>
+                    <select id="v-p1-select" class="form-control"></select>
+                </div>
+                <div class="select-box p2-box">
+                    <h3 style="color: #ff4a5a;">JOGADOR 2</h3>
+                    <label>Nome:</label>
+                    <input type="text" id="v-p2-input" class="form-control" value="Player 2">
+                    <label style="display:block; margin-top:10px;">Estilo:</label>
+                    <select id="v-p2-select" class="form-control"></select>
+                </div>
+            </div>
+            <button class="menu-btn" onclick="iniciarCombateVersus()">INICIAR DUELO</button>
+            <button class="menu-btn btn-secundario" onclick="voltarParaMenuGeral()">Voltar</button>
+        </div>
+
+        <div id="screen-arena-versus" class="screen">
+            <div class="arena-container">
+                <div class="player-side" id="side-p1">
+                    <div class="status-box" style="border-top: 3px solid #3b82f6;">
+                        <div><strong id="v-p1-name-lbl">P1</strong> <span id="v-p1-style-lbl" style="font-size:0.75rem; color:#3b82f6;"></span></div>
+                        <div class="bar-container"><div id="v-p1-hp-bar" class="bar hp-bar"></div></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem;"><span>HP: <span id="v-p1-hp-txt">100</span></span><span>Def: <span id="v-p1-def-txt">50</span></span></div>
+                        <div class="bar-container"><div id="v-p1-def-bar" class="bar def-bar"></div></div>
+                        <div style="font-size:0.75rem;">Stamina: <span id="v-p1-stamina-txt">100</span>/100</div>
+                        <div class="bar-container"><div id="v-p1-stamina-bar" class="bar stamina-bar"></div></div>
+                        <div class="bar-container"><div id="v-p1-sp-bar" class="bar sp-bar"></div></div>
+                    </div>
+                    <div class="grid-acoes" id="actions-p1">
+                        <button id="p1-b1" class="action-btn btn-ataque" onclick="rodarTurnoVersus(1)">G1</button>
+                        <button id="p1-b2" class="action-btn btn-ataque" onclick="rodarTurnoVersus(2)">G2</button>
+                        <button id="p1-b3" class="action-btn btn-defesa" onclick="rodarTurnoVersus(3)">G3</button>
+                        <button id="p1-b4" class="action-btn btn-esquiva" onclick="rodarTurnoVersus(4)">G4</button>
+                        <button id="p1-b6" class="action-btn btn-especial" style="grid-column: span 2;" onclick="rodarTurnoVersus(6)">💥 ESPECIAL</button>
+                    </div>
+                </div>
+
+                <div class="center-area">
+                    <div style="font-size:0.8rem; height: 35px;"><span style="color:#eab308; font-weight:bold;">VEZ DE:</span><div id="current-turn-display" style="font-weight:bold; font-size: 0.9rem;">-</div></div>
+                    <div id="log-versus">Batalha iniciada!</div>
+                    <button class="menu-btn btn-secundario" style="margin:0; padding:6px; font-size:0.8rem;" onclick="voltarParaMenuGeral()">Sair</button>
+                </div>
+
+                <div class="player-side" id="side-p2">
+                    <div class="status-box" style="border-top: 3px solid #ff4a5a;">
+                        <div><strong id="v-p2-name-lbl">P2</strong> <span id="v-p2-style-lbl" style="font-size:0.75rem; color:#ff4a5a;"></span></div>
+                        <div class="bar-container"><div id="v-p2-hp-bar" class="bar hp-bar"></div></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem;"><span>HP: <span id="v-p2-hp-txt">100</span></span><span>Def: <span id="v-p2-def-txt">50</span></span></div>
+                        <div class="bar-container"><div id="v-p2-def-bar" class="bar def-bar"></div></div>
+                        <div style="font-size:0.75rem;">Stamina: <span id="v-p2-stamina-txt">100</span>/100</div>
+                        <div class="bar-container"><div id="v-p2-stamina-bar" class="bar stamina-bar"></div></div>
+                        <div class="bar-container"><div id="v-p2-sp-bar" class="bar sp-bar"></div></div>
+                    </div>
+                    <div class="grid-acoes" id="actions-p2">
+                        <button id="p2-b1" class="action-btn btn-ataque" onclick="rodarTurnoVersus(1)">G1</button>
+                        <button id="p2-b2" class="action-btn btn-ataque" onclick="rodarTurnoVersus(2)">G2</button>
+                        <button id="p2-b3" class="action-btn btn-defesa" onclick="rodarTurnoVersus(3)">G3</button>
+                        <button id="p2-b4" class="action-btn btn-esquiva" onclick="rodarTurnoVersus(4)">G4</button>
+                        <button id="p2-b6" class="action-btn btn-especial" style="grid-column: span 2;" onclick="rodarTurnoVersus(6)">💥 ESPECIAL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-cadastro" class="screen">
+            <h2>CRIE SEU LUTADOR</h2>
+            <div class="form-group"><label for="p-name-input">Nome do Lutador:</label><input type="text" id="p-name-input" class="form-control" value="Guerreiro"></div>
+            <div class="form-group">
+                <label for="p-nat-input">Nacionalidade:</label>
+                <select id="p-nat-input" class="form-control">
+                    <option value="Brasil">🇧🇷 Brasil</option>
+                    <option value="Japão">🇯🇵 Japão</option>
+                    <option value="Coréia do Sul">🇰🇷 Coréia do Sul</option>
+                    <option value="China">🇨🇳 China</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="p-diff-input">Dificuldade da Jornada:</label>
+                <select id="p-diff-input" class="form-control" style="border: 1px solid #eab308; color: #eab308;">
+                    <option value="facil">🟢 Fácil</option>
+                    <option value="medio" selected>🟡 Médio</option>
+                    <option value="dificil">🔴 Difícil</option>
+                </select>
+            </div>
+            <button class="menu-btn" onclick="criarCarreira()">COMEÇAR TRAJETÓRIA</button>
+            <button class="menu-btn btn-secundario" onclick="voltarParaMenuGeral()">Voltar</button>
+        </div>
+
+        <div id="screen-hub" class="screen">
+            <h2>PAINEL DE PROGRESSO</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <button class="menu-btn" style="margin:0; padding: 10px; font-size:0.85rem; background-color: #10b981; color: white;" onclick="salvarJogoManual()">💾 Salvar Jogo</button>
+                <button class="menu-btn" style="margin:0; padding: 10px; font-size:0.85rem; background-color: #ef4444; color: white;" onclick="limparSave()">🗑️ Apagar Save</button>
+            </div>
+            <div class="hub-info" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div>👤 <span id="hub-name">Nome</span> (<span id="hub-nat">BR</span>)<span id="hub-sorte-badge"></span></div>
+                    <div>⚙️ <span id="hub-diff">Médio</span> | Estilo: <span id="hub-style" style="color:#00ffc8;">Básico</span></div>
+                    <div style="margin-top: 4px;">🪙 <span id="hub-coins" style="color:#eab308; font-weight:bold;">0</span> moedas | Luta: <span id="hub-fight-num" style="font-weight:bold; color:#ff4a5a;">1/30</span></div>
+                </div>
+                <button class="style-select-btn" style="background:#eab308; padding: 10px;" onclick="abrirRoleta()">🎰 ROLETA (50🪙)</button>
+            </div>
+            
+            <div class="hub-info" id="next-opp-card" style="padding: 10px;"></div>
+
+            <div class="hub-info" style="padding: 10px;">
+                <div class="tabs-container">
+                    <button id="tab-estilos-btn" class="tab-btn active" onclick="mudarAba('estilos')">🥋 ESTILOS</button>
+                    <button id="tab-luvas-btn" class="tab-btn" onclick="mudarAba('luvas')">🥊 LUVAS</button>
+                    <button id="tab-garotas-btn" class="tab-btn" onclick="mudarAba('garotas')">👑 CORNERS</button>
+                    <button id="tab-revanche-btn" class="tab-btn" onclick="mudarAba('revanche')">⚔️ REVANCHE</button>
+                    <button id="tab-loja-btn" class="tab-btn" onclick="mudarAba('loja')" style="background-color: #4338ca; color: #fff; border-color: #4f46e5;">🛒 LOJA</button>
+                </div>
+                <div id="tab-estilos" class="tab-content active"><div id="unlocked-styles-list"></div></div>
+                <div id="tab-luvas" class="tab-content"><div id="unlocked-gloves-list"></div></div>
+                <div id="tab-garotas" class="tab-content"><div id="unlocked-girls-list"></div></div>
+                <div id="tab-revanche" class="tab-content"><div id="defeated-opponents-list" style="max-height: 140px;"></div></div>
+                <div id="tab-loja" class="tab-content">
+                    <div class="style-item" style="border-left: 4px solid #f59e0b;">
+                        <div>
+                            <strong>🧪 Poção de Sorte Cósmica</strong><br>
+                            <span style="font-size:0.75rem; color:#eab308;">Dobra (2x) a chance de copiar Estilos e dropar Luvas após a luta! Permanente até dropar algo.</span>
+                        </div>
+                        <button id="btn-comprar-pot" class="style-select-btn" style="background:#f59e0b; color:#0b0f19; min-width:65px;" onclick="comprarPocaoSorte()">150 🪙</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="menu-btn" onclick="mostrarFaseDialogo()">ENTRAR NA ARENA</button>
+            <button class="menu-btn btn-secundario" onclick="voltarParaMenuGeral()">Sair</button>
+        </div>
+        
+        <div id="screen-dialogue" class="screen">
+            <h2 style="color: #eab308;">CONFRONTO DE ENTRADA</h2>
+            <div class="dialogue-box">
+                <div class="dialogue-speaker" id="dial-speaker-name">Lutador</div>
+                <div class="dialogue-text" id="dial-speaker-text">"Frase..."</div>
+            </div>
+            <button class="menu-btn" onclick="confirmarEIrPraLuta()">FECHAR GUARDA E LUTAR!</button>
+            <button class="menu-btn btn-secundario" onclick="retornarDoDialogo()">Recuar</button>
+        </div>
+
+        <div id="screen-combat" class="screen">
+            <h2 id="combat-mode-title">LUTA</h2>
+            <div class="status-box">
+                <div><strong id="combat-player-name">Você</strong><span id="combat-player-style" style="font-size:0.75rem; color:#00ffc8; margin-left:5px;">(Básico)</span></div>
+                <div style="font-size:0.75rem; color:#eab308;" id="combat-player-gear"></div>
+                <div class="bar-container"><div id="p-hp" class="bar hp-bar"></div></div>
+                <div style="font-size:0.8rem; display:flex; justify-content:space-between;"><span id="p-style-effect" style="font-size:0.75rem; color:#9ca3af;">Sem buffs</span><span>HP: <span id="p-hp-text">100</span>/<span id="p-hp-max">100</span></span></div>
+                <div class="bar-container"><div id="p-def" class="bar def-bar"></div></div>
+                <div style="font-size:0.8rem; text-align:right;">Defesa: <span id="p-def-text">50</span>/<span id="p-def-max">50</span></div>
+                
+                <div style="font-size:0.8rem; display:flex; justify-content:space-between; margin-top:4px;"><span>⚡ Energia (Stamina):</span><span><span id="p-stamina-text">100</span>/100</span></div>
+                <div class="bar-container"><div id="p-stamina" class="bar stamina-bar"></div></div>
+            </div>
+            
+            <div class="status-box" style="border-color:#ff4a5a;">
+                <div><strong id="combat-enemy-name">Inimigo</strong><span id="combat-enemy-style" style="font-size:0.75rem; color:#ff4a5a; margin-left:5px;">(Básico)</span></div>
+                <div style="font-size:0.75rem; color:#ef4444;" id="combat-enemy-gear"></div>
+                <div class="bar-container"><div id="e-hp" class="bar hp-bar"></div></div>
+                <div style="font-size:0.8rem; text-align:right;">HP: <span id="e-hp-text">100</span>/<span id="e-hp-max">100</span></div>
+                
+                <div style="font-size:0.8rem; display:flex; justify-content:space-between; margin-top:4px;"><span>⚡ Stamina Inimigo:</span><span><span id="e-stamina-text">100</span>/100</span></div>
+                <div class="bar-container"><div id="e-stamina" class="bar stamina-bar"></div></div>
+            </div>
+            
+            <div id="log">Escolha seu golpe...</div>
+            <div style="margin-bottom:10px; font-size:0.8rem; text-align:left;">Especial: <span id="sp-text">0</span>/100%<div class="bar-container"><div id="p-sp" class="bar sp-bar"></div></div></div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button id="btn-atk-1" class="action-btn btn-ataque" onclick="acaoCombate(1)">1. Golpe 1</button>
+                <button id="btn-atk-2" class="action-btn btn-ataque" onclick="acaoCombate(2)">2. Golpe 2</button>
+                <button id="btn-atk-3" class="action-btn btn-defesa" onclick="acaoCombate(3)">3. Defender</button>
+                <button id="btn-atk-4" class="action-btn btn-esquiva" onclick="acaoCombate(4)">4. Desviar</button>
+            </div>
+            <button id="btn-cenario" class="action-btn btn-cenario" onclick="acaoCombate(5)">5. Objeto Especial</button>
+            <button id="btn-especial" class="action-btn btn-especial" onclick="acaoCombate(6)">6. PODER MÁXIMO!</button>
+            <button class="menu-btn btn-secundario" style="margin-top:15px;" onclick="voltarParaMenuGeral()">Desistir</button>
+        </div>
+    </div>
+
+    <div id="speech-overlay-panel" class="speech-overlay" onclick="fecharQuadroFrase()">
+        <div id="speech-card" class="speech-bubble-card">
+            <div id="speech-owner" class="speech-author">Oponente</div>
+            <div id="speech-text" class="speech-msg">"..."</div>
+            <div class="speech-hint">👉 Toque em qualquer lugar para continuar</div>
+        </div>
+    </div>
+
+    <div id="outcome-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">VITÓRIA!</h2>
+            <p id="modal-text">Resultado da luta.</p>
+            
+            <div id="modal-tutorial-box" style="display:none; text-align:left;">
+                <div class="guide-section">
+                    <div class="guide-title">🥋 1. Como Funcionam os Combates</div>
+                    <p class="guide-text">As lutas funcionam em turnos. Cada ação sua permite que o oponente também responda logo em seguida com base nas condições dele.</p>
+                </div>
+                <div class="guide-section">
+                    <div class="guide-title">⚡ 2. Gerenciamento de Atributos</div>
+                    <p class="guide-text"><strong>HP (Vida):</strong> Se chegar a 0, você perde.</p>
+                    <p class="guide-text"><strong>Defesa:</strong> Mitiga danos pesados. Pode ser totalmente restaurada ao usar a ação <strong>Defender</strong>.</p>
+                    <p class="guide-text"><strong>Stamina (Energia):</strong> Golpes normais e especiais consomem Stamina. Se você ficar zerado, não poderá atacar! Use a ação de Defesa para recuperar +25 de Stamina rapidamente.</p>
+                    <p class="guide-text"><strong>Especial (SP%):</strong> Aumenta conforme você causa danos. Quando atinge 100%, libera o botão ultra-potente do <strong>Poder Máximo</strong>.</p>
+                </div>
+                <div class="guide-section">
+                    <div class="guide-title">💨 3. Esquivas e Objetos</div>
+                    <p class="guide-text"><strong>Desviar:</strong> Possui chance de desvio baseada no seu estilo e luva. Se funcionar, você evita todo o dano do oponente e aplica um contra-ataque imediato!</p>
+                    <p class="guide-text"><strong>Objeto Especial:</strong> Fica visível apenas quando sua vida cai para menos de 45 HP, garantindo um último recurso de alto dano.</p>
+                </div>
+                <div class="guide-section">
+                    <div class="guide-title">🥊 4. Progressão e Copiar Estilos</div>
+                    <p class="guide-text">No Modo Vencedor (30 Níveis), ao derrotar um oponente, você tem uma **chance baseada na raridade** de copiar permanentemente o estilo de luta dele. Luvas exclusivas e Aliadas de Corner também podem ser desbloqueadas ou sorteadas na Roleta por 50 moedas.</p>
+                </div>
+            </div>
+
+            <div id="modal-changelog-box" class="changelog-box" style="display:none;">
+                <div class="changelog-header-modal"><span style="font-weight:bold; color:#00ffc8;">Notas do Patch</span><span class="changelog-version-badge">Build 5.0</span></div>
+                <ul class="changelog-ul">
+                    <li><strong>🛒 Sistema de Loja Adicionado:</strong> Nova aba inserida no Painel de Progresso, permitindo investimentos estratégicos para o seu lutador.</li>
+                    <li><strong>🧪 Poção de Sorte Cósmica (2x):</strong> Adicionado item consumível por 150 moedas. Ao comprar, suas taxas de drop e cópia de estilos são permanentemente duplicadas até você adquirir uma recompensa inédita pós-luta!</li>
+                    <li><strong>Interface Otimizada:</strong> Inserção de abas responsivas adaptadas para evitar quebras em telas mobile, além de indicador visual de buff ativo.</li>
+                </ul>
+            </div>
+            
+            <div id="modal-reward-box" style="margin:10px 0; padding:10px; background:#1f2937; border-radius:8px; border:1px solid #00ffc8; display:none;"><strong id="reward-rarity-title" style="color:#00ffc8;">🥋 Novo Estilo Copiado!</strong><div id="modal-reward-name" style="font-weight:bold; margin-top:5px;">Estilo</div></div>
+            <div id="modal-glove-box" style="margin:10px 0; padding:10px; background:#1f2937; border-radius:8px; border:1px solid #ff4a5a; display:none;"><strong id="glove-rarity-title" style="color:#ff4a5a;">🥊 Nova Luva Dropada!</strong><div id="modal-glove-name" style="font-weight:bold; margin-top:5px;">Luva</div><div id="modal-glove-stats" style="font-size:0.8rem; color:#9ca3af;">Atributos</div></div>
+            <div id="modal-girl-box" style="margin:10px 0; padding:10px; background:#1f2937; border-radius:8px; border:1px solid #a855f7; display:none;"><strong style="color:#a855f7;">👑 Aliada Conquistada!</strong><div id="modal-girl-name" style="font-weight:bold; margin-top:5px;">Nome</div><div id="modal-girl-buff" style="font-size:0.8rem; color:#9ca3af;">Efeito</div></div>
+            <button class="menu-btn" onclick="fecharModalGeral()">AVANÇAR</button>
+        </div>
+    </div>
+
+    <script>
+        const ESTILOS = {
+            'Básico': { 
+                raridade: 'comum',
+                hpMax: 100, defMax: 50, danoMult: 1.0, esquiva: 0.50, 
+                g1: "Soco Direto", g2: "Chute Frontal", g3: "Bloqueio", g4: "Passo de Lado",
+                espNome: "Combinação do Iniciante", espDanoBase: 35,
+                fraseAtk: "Vou mostrar que o básico bem feito quebra qualquer um!",
+                fraseOpo: "Argh! Esse combo simples me pegou totalmente desprevenido!",
+                costG1: 15, costG2: 25, costEsp: 40
+            },
+            'Taekwondo': { 
+                raridade: 'comum',
+                hpMax: 105, defMax: 45, danoMult: 1.15, esquiva: 0.55, 
+                g1: "Bandal Chagi", g2: "Dolryeo Chagi", g3: "Guarda Alta", g4: "Esquiva Fluida",
+                espNome: "Furacão de Chutes 540º", espDanoBase: 42,
+                fraseAtk: "Tente rastrear meus pés no ar! Chute Tornado!",
+                fraseOpo: "O quê?! Que velocidade de rotação absurda, não consegui ver o chute!",
+                costG1: 12, costG2: 28, costEsp: 45
+            },
+            'Jiu-Jitsu': { 
+                raridade: 'comum',
+                hpMax: 110, defMax: 65, danoMult: 1.05, esquiva: 0.45, 
+                g1: "Leg Sweep", g2: "Chave de Braço", g3: "Guarda Fechada", g4: "Fuga de Quadril",
+                espNome: "Mata-Leão Ajustado", espDanoBase: 45,
+                fraseAtk: "Uma vez que eu pego as suas costas, o combate acaba. Durma!",
+                fraseOpo: "C-Sufocando... Não consigo me livrar dessa pressão no meu pescoço!",
+                costG1: 18, costG2: 22, costEsp: 35
+            },
+            'Boxe': { 
+                raridade: 'comum',
+                hpMax: 115, defMax: 50, danoMult: 1.18, esquiva: 0.50, 
+                g1: "Jab Esquerda", g2: "Direto Direita", g3: "Clinche Defensivo", g4: "Pêndulo Veloz",
+                espNome: "Cruzado de Nocaute Limpo", espDanoBase: 44,
+                fraseAtk: "Você abaixou a guarda por um milissegundo! Toma esse Cruzado!",
+                fraseOpo: "Minhas pernas tremeram... Minha visão apagou por completo!",
+                costG1: 10, cost0: 20, costEsp: 40
+            },
+            'Muay Thai': { 
+                raridade: 'rara',
+                hpMax: 110, defMax: 55, danoMult: 1.25, esquiva: 0.48, 
+                g1: "Cotovelada", g2: "Joelhada Voadeira", g3: "Bloqueio Canela", g4: "Passo Lateral",
+                espNome: "Fúria das Oito Armas", espDanoBase: 46,
+                fraseAtk: "Culinária tailandesa: Cotovelo e canela de aço na sua têmpora!",
+                fraseOpo: "Maldição! Parece que fui atropelado por um caminhão de concreto!",
+                costG1: 15, costG2: 30, costEsp: 50
+            },
+            'Karate': { 
+                raridade: 'rara',
+                hpMax: 120, defMax: 60, danoMult: 1.20, esquiva: 0.52, 
+                g1: "Gyaku Zuki", g2: "Mawashi Geri", g3: "Uke Defesa", g4: "Desvio Ashi",
+                espNome: "Soco Explosivo Ichigeki", espDanoBase: 45,
+                fraseAtk: "Concentração máxima... Um soco, uma vitória certa! OSS!",
+                fraseOpo: "Que soco pesado... Ele atravessou minha defense como se fosse papel!",
+                costG1: 14, costG2: 26, costEsp: 45
+            },
+            'Kung Fu': { 
+                raridade: 'rara',
+                hpMax: 115, defMax: 50, danoMult: 1.15, esquiva: 0.65, 
+                g1: "Palma LouvaDeus", g2: "Chute da Garça", g3: "Postura Tigre", g4: "Giro Sombra",
+                espNome: "Impacto das Cinco Penugens", espDanoBase: 43,
+                fraseAtk: "O fluxo do meu Chi vai colapsar seus pontos de pressão!",
+                fraseOpo: "O movimento dele foi suave, mas a força interna me esmagou por dentro!",
+                costG1: 12, costG2: 24, costEsp: 40
+            },
+            'Kickboxing': { 
+                raridade: 'epica',
+                hpMax: 120, defMax: 55, danoMult: 1.22, esquiva: 0.52, 
+                g1: "Gancho Rápido", g2: "Chute Rotativo", g3: "Dupla Cobertura", g4: "Recuo Ágil",
+                espNome: "Combo Destruidor Holandês", espDanoBase: 46,
+                fraseAtk: "Sequência de quatro socos e o chute baixo para quebrar sua base!",
+                fraseOpo: "Fui cercado por golpes de todos os lados! Que pressão insana!",
+                costG1: 15, costG2: 25, costEsp: 45
+            },
+            'Krav Maga': { 
+                raridade: 'epica',
+                hpMax: 125, defMax: 60, danoMult: 1.30, esquiva: 0.50, 
+                g1: "Golpe Garganta", g2: "Chute Inguinal", g3: "Defesa Tática", g4: "Giro de Escape",
+                espNome: "Neutralização Urbana Absoluta", espDanoBase: 48,
+                fraseAtk: "Isso não é uma apresentação, é sobrevivência! Fim de jogo!",
+                fraseOpo: "Argh! Ele atacou meus pontos vitais sem hesitação nenhuma!",
+                costG1: 20, costG2: 28, costEsp: 45
+            },
+            'Sumô': { 
+                raridade: 'epica',
+                hpMax: 160, defMax: 80, danoMult: 1.10, esquiva: 0.25, 
+                g1: "Tapa Nodowa", g2: "Empurrão", g3: "Base Firme", g4: "Desvio Curto",
+                espNome: "Tapa de Impacto Harizete", espDanoBase: 40,
+                fraseAtk: "Sinta o peso do campeão! Saia da minha arena!",
+                fraseOpo: "Que força monstruosa! Senti como se uma parede desabasse sobre mim!",
+                costG1: 22, costG2: 32, costEsp: 50
+            },
+            'Oito Portas Internas': { 
+                raridade: 'mitica',
+                hpMax: 130, defMax: 30, danoMult: 1.65, esquiva: 0.70, 
+                g1: "Ataque Dinâmico", g2: "Lótus Oculta", g3: "Defesa Impacto", g4: "Passo Relâmpago",
+                espNome: "Lótus Primária Suprema", espDanoBase: 55,
+                fraseAtk: "Portão da Dor, ABRA! Essa é a força do effort puro!",
+                fraseOpo: "M-Mas o que é isso?! A velocidade dele distorceu o ar à minha volta!",
+                costG1: 15, costG2: 35, costEsp: 55
+            },
+            'Gomu Gomu/Gatling': { 
+                raridade: 'mitica',
+                hpMax: 150, defMax: 70, danoMult: 1.45, esquiva: 0.60, 
+                g1: "Gomu Pistol", g2: "Gomu Gatling", g3: "Corpo Borracha", g4: "Sori Reflexo",
+                espNome: "Gomu Gomu no Jet Gatling", espDanoBase: 58,
+                fraseAtk: "Você não vai conseguir desviar de milhares de socos supersônicos!",
+                fraseOpo: "São braços demais... Parece uma metralhadora humana me atingindo!",
+                costG1: 15, costG2: 35, costEsp: 60
+            },
+            'Modo Bárion': { 
+                raridade: 'mitica',
+                hpMax: 160, defMax: 80, danoMult: 1.60, esquiva: 0.55, 
+                g1: "Punho Energia", g2: "Super Rasengan", g3: "Guarda Caudas", g4: "Salto Bárion",
+                espNome: "Rasengan de Energia Vital", espDanoBase: 65,
+                fraseAtk: "Cada golpe consome nossa existência. Esse é o meu ataque final!",
+                fraseOpo: "Minha própria energia está sumindo ao tocá-lo... Que poder aterrorizante!",
+                costG1: 20, costG2: 40, costEsp: 65
+            },
+            'Instinto Superior': { 
+                raridade: 'mitica',
+                hpMax: 140, defMax: 40, danoMult: 1.70, esquiva: 0.88, 
+                g1: "Esquiva Ativa", g2: "Soco Divine Void", g3: "Barreira Divina", g4: "Reflexo Absoluto",
+                espNome: "Golpe do Vazio Prateado", espDanoBase: 70,
+                fraseAtk: "Meu corpo se move sem pensar. Seu destino foi decidido.",
+                fraseOpo: "Nenhum ataque encosta nele... E agora ele apareceu nas minhas costas?!",
+                costG1: 10, costG2: 30, costEsp: 50
+            }
+        };
+
+        function gerarFraseOponente(tipo, nomeAtaque, estiloAtacante) {
+            const reacoesGerais = {
+                bloqueado: [
+                    `Sua defense é resistente, mas não vai segurar minha força!`,
+                    `Pode se esconder atrás da guarda, eu vou quebrar esse bloqueio!`
+                ],
+                objeto: [
+                    `Isso é trapaça!! Usar objetos na arena não vale!`,
+                    `Argh! Jogar coisas em mim? Cadê a honra do lutador?!`
+                ],
+                cansado: [
+                    `Hahaha! Você está completamente exausto! Ficou fácil bater agora!`,
+                    `Olha só, está arfando de cansaço! Seu poder caiu totalmente.`
+                ]
+            };
+
+            if (tipo === 'bloqueado') return reacoesGerais.bloqueado[Math.floor(Math.random() * reacoesGerais.bloqueado.length)];
+            if (tipo === 'objeto') return reacoesGerais.objeto[Math.floor(Math.random() * reacoesGerais.objeto.length)];
+            if (tipo === 'cansado') return reacoesGerais.cansado[Math.floor(Math.random() * reacoesGerais.cansado.length)];
+
+            if (tipo === 'achou_ruim') {
+                const frasesDano = [
+                    `Ai! Esse [${nomeAtaque}] machucou de verdade!`,
+                    `Maldito... Esse golpe pegou em cheio!`,
+                    `Argh! Que impacto vindo desse estilo ${estiloAtacante}!`,
+                    `Belo golpe... Mas ainda estou de pé!`
+                ];
+                return frasesDano[Math.floor(Math.random() * frasesDano.length)];
+            }
+
+            if (tipo === 'zuar_cara') {
+                const frasesZueira = [
+                    `Lento demais! Desse jeito seu [${nomeAtaque}] não me arranha!`,
+                    `Hahaha! Errou feio! Tá batendo no vento com esse ${estiloAtacante}?`,
+                    `Seu movimento foi totalmente previsível!`,
+                    `Só isso? Achei que o estilo ${estiloAtacante} fosse melhor!`
+                ];
+                return frasesZueira[Math.floor(Math.random() * frasesZueira.length)];
+            }
+            
+            return "Vamos ver do que você é capaz!";
+        }
+
+        const INIMIGOS_VENCEDOR = [];
+        const nomesRegulares = ["Aleksei", "Chen", "Lee", "Marcus", "Silva", "Takashi", "Viktor", "Bruce", "Ken", "Ryu", "Badr", "Buakaw", "Jon", "Georges", "Anderson", "Khabib"];
+        const estilosRegulares = ["Taekwondo", "Jiu-Jitsu", "Boxe", "Muay Thai", "Karate", "Kung Fu", "Kickboxing", "Krav Maga", "Sumô"];
+        const dialogosFrases = ["Prepare-se para testar meus chutes!", "O chão é o meu oceano!", "Espero que sua guarda aguente meus ganchos!", "Sinta minhas joelhadas do Muay Thai!"];
+
+        for (let i = 1; i <= 24; i++) {
+            let nomeLutador = `Desafiante ${nomesRegulares[(i - 1) % nomesRegulares.length]} (Nível ${i})`;
+            let raridade = "comum";
+            if (i > 8 && i <= 16) raridade = "rara";
+            if (i > 16) raridade = "epica";
+
+            INIMIGOS_VENCEDOR.push({
+                index: i - 1,
+                nome: nomeLutador,
+                estilo: estilosRegulares[(i - 1) % estilosRegulares.length],
+                hp: 95 + (i * 4), def: 35 + (i * 2),
+                dialogo: `"${dialogosFrases[(i - 1) % dialogosFrases.length]}"`,
+                luva: { id: `glove_${i}`, nome: `Luvas de ${nomesRegulares[(i - 1) % nomesRegulares.length]}`, danoBonus: 2 + i, hpBonus: 5 + (i * 2), esquivaBonus: 0.01 * Math.floor(i / 2), raridade: raridade }
+            });
+        }
+        
+        INIMIGOS_VENCEDOR.push({ index: 24, nome: "Rock Lee (Portão da Dor)", estilo: "Oito Portas Internas", hp: 200, def: 40, dialogo: "O trabalho duro vence o talento genial!", luva: { id: "glove_25", nome: "Faixas Desérticas de Lótus", danoBonus: 45, hpBonus: 50, esquivaBonus: 0.15, raridade: "mitica" } });
+        INIMIGOS_VENCEDOR.push({ index: 25, nome: "Monkey D. Luffy (Gear 2)", estilo: "Gomu Gomu/Gatling", hp: 220, def: 80, dialogo: "Eu serei o Rei dos Piratas!", luva: { id: "glove_26", nome: "Luvas Emborrachadas do Rei", danoBonus: 55, hpBonus: 70, esquivaBonus: 0.12, raridade: "mitica" } });
+        INIMIGOS_VENCEDOR.push({ index: 26, nome: "Might Guy (8º Portão)", estilo: "Oito Portas Internas", hp: 240, def: 30, dialogo: "Deixe a juventude queimar intensamente!", luva: { id: "glove_27", nome: "Manoplas de Chamas Vermelhas", danoBonus: 75, hpBonus: 40, esquivaBonus: 0.20, raridade: "mitica" } });
+        INIMIGOS_VENCEDOR.push({ index: 27, nome: "Naruto Uzumaki (Bárion)", estilo: "Modo Bárion", hp: 260, def: 90, dialogo: "Esse é o meu jeito ninja!", luva: { id: "glove_28", nome: "Garras Celestiais de Raposa", danoBonus: 85, hpBonus: 100, esquivaBonus: 0.10, raridade: "mitica" } });
+        INIMIGOS_VENCEDOR.push({ index: 28, nome: "Son Goku (Instinto Presságio)", estilo: "Instinto Superior", hp: 280, def: 50, dialogo: "Oi, eu sou o Goku! Vamos lutar com tudo!", luva: { id: "glove_29", nome: "Punhos Cósmicos do Presságio", danoBonus: 100, hpBonus: 120, esquivaBonus: 0.25, raridade: "mitica" } });
+        INIMIGOS_VENCEDOR.push({ index: 29, nome: "Goku (Instinto Superior Completo)", estilo: "Instinto Superior", hp: 320, def: 60, dialogo: "Mostre-me o limite do seu power!", luva: { id: "glove_30", nome: "Manoplas Divinas do Instinto Perfeito", danoBonus: 150, hpBonus: 200, esquivaBonus: 0.35, raridade: "mitica" } });
+
+        const BANCO_MULHERES = [
+            { nome: "Elena", efeito: "Cura 4 HP no início de cada turno", tipo: "cura", valor: 4 },
+            { nome: "Mai", efeito: "+20% Moedas ganhas no fim da luta", tipo: "moeda", valor: 1.2 },
+            { nome: "Asuka", efeito: "Começa a luta com 25% de Especial extra", tipo: "sp", valor: 25 },
+            { nome: "Chun-Li", efeito: "+5% de chance de evasão em esquivas", tipo: "esquiva", valor: 0.05 }
+        ];
+
+        let player = { name: "Jogador", nat: "Brasil", hp: 100, hpMax: 100, def: 50, defMax: 50, stamina: 100, sp: 0, estilo: 'Básico', dificuldade: 'medio', moedas: 0, pocaoSorte: false };
+        let enemy = { name: "Bot", estilo: 'Básico', hp: 100, hpMax: 100, def: 50, stamina: 100 };
+        let modoAtual = 'rapida'; let progressoCarreira = 1; let idRevancheAtual = null;
+        
+        let estilosDesbloqueados = ['Básico']; let luvasDesbloqueadas = []; let luvaEquipada = null; let mulheresDesbloqueadas = []; let mulherEquipada = null;
+        let enemyLuva = null; 
+
+        let vp1 = { name: "P1", estilo: "", hp: 100, hpMax: 100, def: 50, defMax: 50, stamina: 100, sp: 0, defendendo: false };
+        let vp2 = { name: "P2", estilo: "", hp: 100, hpMax: 100, def: 50, defMax: 50, stamina: 100, sp: 0, defendendo: false };
+        let turnoVersus = 1; let callbackFimTurno = null;
+
+        function salvarJogo(silencioso = false) {
+            if (modoAtual === 'rapida' && progressoCarreira === 1 && player.moedas === 0 && estilosDesbloqueados.length === 1) return;
+            const dadosSalvar = { player: player, progressoCarreira: progressoCarreira, estilosDesbloqueados: estilosDesbloqueados, luvasDesbloqueadas: luvasDesbloqueadas, luvaEquipada: luvaEquipada, mulheresDesbloqueadas: mulheresDesbloqueadas, mulherEquipada: mulherEquipada };
+            localStorage.setItem('HZD_V2_SAVE', JSON.stringify(dadosSalvar));
+            verificarSaveExistente();
+            if (!silencioso) alert("💾 Progresso salvo com sucesso!");
+        }
+
+        function salvarJogoManual() { salvarJogo(false); }
+
+        function carregarJogo() {
+            const dadosCarregados = localStorage.getItem('HZD_V2_SAVE');
+            if (dadosCarregados) {
+                const dados = JSON.parse(dadosCarregados);
+                player = dados.player; progressoCarreira = dados.progressoCarreira; estilosDesbloqueados = dados.estilosDesbloqueados; luvasDesbloqueadas = dados.luvasDesbloqueadas; luvaEquipada = dados.luvaEquipada; mulheresDesbloqueadas = dados.mulheresDesbloqueadas; mulherEquipada = dados.mulherEquipada;
+                if(player.pocaoSorte === undefined) player.pocaoSorte = false;
+                modoAtual = 'vencedor'; atualizarHubCarreira(); mudarTela('screen-hub');
+                alert(`📂 Bem-vindo de volta, ${player.name}! Dados carregados.`);
+            } else { alert("Nenhum progresso encontrado para carregar."); }
+        }
+
+        function verificarSaveExistente() {
+            const btnContinuar = document.getElementById('btn-continuar');
+            if (localStorage.getItem('HZD_V2_SAVE')) btnContinuar.style.display = 'block';
+            else btnContinuar.style.display = 'none';
+        }
+
+        function limparSave() {
+            if (confirm("⚠️ ATENÇÃO: Deseja apagar seu save permanentemente? Seu progresso será resetado.")) {
+                localStorage.removeItem('HZD_V2_SAVE'); alert("🗑️ Arquivo deletado. O jogo vai reiniciar."); window.location.reload();
+            }
+        }
+
+        function abrirChangelog() {
+            document.getElementById('modal-title').innerText = "⚙️ NOTAS DA ATUALIZAÇÃO";
+            document.getElementById('modal-text').innerText = "Confira abaixo as alterações aplicadas na atual build do jogo.";
+            document.getElementById('modal-reward-box').style.display = 'none'; document.getElementById('modal-glove-box').style.display = 'none'; document.getElementById('modal-girl-box').style.display = 'none'; document.getElementById('modal-tutorial-box').style.display = 'none';
+            document.getElementById('modal-changelog-box').style.display = 'block'; document.getElementById('outcome-modal').style.display = 'flex';
+        }
+
+        function abrirGuiaTutorial() {
+            document.getElementById('modal-title').innerText = "❓ COMO JOGAR - COMPRÊNDIO";
+            document.getElementById('modal-text').innerText = "Aprenda as mecânicas fundamentais e domine a arena do HZD V2.";
+            document.getElementById('modal-reward-box').style.display = 'none'; document.getElementById('modal-glove-box').style.display = 'none'; document.getElementById('modal-girl-box').style.display = 'none'; document.getElementById('modal-changelog-box').style.display = 'none';
+            document.getElementById('modal-tutorial-box').style.display = 'block'; document.getElementById('outcome-modal').style.display = 'flex';
+        }
+
+        function mudarTela(idTela) { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
+            document.getElementById(idTela).classList.add('active'); 
+            const gearBtn = document.querySelector('.changelog-btn');
+            const helpBtn = document.querySelector('.help-btn');
+            if(idTela === 'screen-menu') { gearBtn.style.display = 'block'; helpBtn.style.display = 'block'; verificarSaveExistente(); } else { gearBtn.style.display = 'none'; helpBtn.style.display = 'none'; }
+            if(idTela === 'screen-arena-versus') document.getElementById('main-card').classList.add('modo-versus-ativo');
+            else document.getElementById('main-card').classList.remove('modo-versus-ativo');
+        }
+        
+        function voltarParaMenuGeral() { mudarTela('screen-menu'); }
+        function mostrarCadastroVencedor() { mudarTela('screen-cadastro'); }
+
+        function abrirQuadroFrase(autor, msg, isP1 = false, proximoCallback = null) {
+            const overlay = document.getElementById('speech-overlay-panel');
+            document.getElementById('speech-owner').innerText = autor;
+            document.getElementById('speech-text').innerText = `"${msg}"`;
+            document.getElementById('speech-card').classList.toggle('p1-color', isP1);
+            overlay.style.display = 'flex';
+            callbackFimTurno = proximoCallback;
+        }
+
+        function fecharQuadroFrase() {
+            document.getElementById('speech-overlay-panel').style.display = 'none';
+            if (callbackFimTurno) { let tempCallback = callbackFimTurno; callbackFimTurno = null; tempCallback(); }
+        }
+
+        function mudarAba(aba) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${aba}-btn`).classList.add('active');
+            document.getElementById(`tab-${aba}`).classList.add('active');
+        }
+
+        function criarCarreira() {
+            player.name = document.getElementById('p-name-input').value.trim() || "Guerreiro";
+            player.nat = document.getElementById('p-nat-input').value;
+            player.dificuldade = document.getElementById('p-diff-input').value;
+            player.estilo = 'Básico'; player.moedas = 0; player.pocaoSorte = false; progressoCarreira = 1; estilosDesbloqueados = ['Básico']; luvasDesbloqueadas = []; luvaEquipada = null; mulheresDesbloqueadas = []; mulherEquipada = null;
+            modoAtual = 'vencedor'; atualizarHubCarreira(); mudarTela('screen-hub'); salvarJogo(true);
+        }
+
+        function obterLabelRaridade(raridade) {
+            if (raridade === 'rara') return '<span class="rarity-rara">[Rara]</span>';
+            if (raridade === 'epica') return '<span class="rarity-epica">[Épica]</span>';
+            if (raridade === 'mitica') return '<span class="rarity-mitica">[Mítica]</span>';
+            return '<span class="rarity-comum">[Comum]</span>';
+        }
+
+        function comprarPocaoSorte() {
+            if (player.pocaoSorte) {
+                alert("🔮 Você já possui um efeito de Sorte ativa! Aproveite-o na arena antes de comprar outro.");
+                return;
+            }
+            if (player.moedas < 150) {
+                alert("🪙 Moedas insuficientes! Você precisa de 150 moedas de ouro.");
+                return;
+            }
+            player.moedas -= 150;
+            player.pocaoSorte = true;
+            alert("🧪 Poção de Sorte Cósmica consumida! Suas chances de drop foram DOBRADAS (2x) para o próximo item conquistado.");
+            atualizarHubCarreira();
+            salvarJogo(true);
+        }
+
+        function atualizarHubCarreira() {
+            document.getElementById('hub-name').innerText = player.name;
+            document.getElementById('hub-nat').innerText = player.nat === 'Brasil' ? '🇧🇷' : player.nat === 'Japão' ? '🇯🇵' : player.nat === 'Coréia do Sul' ? '🇰🇷' : '🇨🇳';
+            document.getElementById('hub-diff').innerText = player.dificuldade === 'facil' ? "🟢 Fácil" : player.dificuldade === 'dificil' ? "🔴 Difícil" : "🟡 Médio";
+            document.getElementById('hub-coins').innerText = player.moedas; document.getElementById('hub-style').innerText = player.estilo; document.getElementById('hub-fight-num').innerText = Math.min(30, progressoCarreira) + "/30";
+            
+            const badgeSorte = document.getElementById('hub-sorte-badge');
+            if (player.pocaoSorte) {
+                badgeSorte.innerHTML = `<span class="badge-sorte">🧪 Sorte 2x</span>`;
+                document.getElementById('btn-comprar-pot').innerText = "ATIVA";
+                document.getElementById('btn-comprar-pot').style.background = "#4b5563";
+                document.getElementById('btn-comprar-pot').style.color = "#fff";
+            } else {
+                badgeSorte.innerHTML = "";
+                document.getElementById('btn-comprar-pot').innerText = "150 🪙";
+                document.getElementById('btn-comprar-pot').style.background = "#f59e0b";
+                document.getElementById('btn-comprar-pot').style.color = "#0b0f19";
+            }
+
+            const listContainer = document.getElementById('unlocked-styles-list'); listContainer.innerHTML = '';
+            
+            estilosDesbloqueados.forEach(st => {
+                const configEstilo = ESTILOS[st] || { raridade: 'comum' };
+                const isEquipped = player.estilo === st;
+                const div = document.createElement('div'); 
+                div.className = `style-item ${isEquipped ? 'equipped' : ''} raridade-${configEstilo.raridade}`;
+                div.innerHTML = `<div><strong>${st}</strong> <span style="font-size:0.7rem; opacity:0.8;">(${configEstilo.raridade.toUpperCase()})</span></div> ${!isEquipped ? `<button class="style-select-btn" onclick="equiparEstilo('${st}')">USAR</button>` : '<span>ATIVO</span>'}`;
+                listContainer.appendChild(div);
+            });
+
+            const glovesContainer = document.getElementById('unlocked-gloves-list'); glovesContainer.innerHTML = '';
+            if(luvasDesbloqueadas.length === 0) {
+                glovesContainer.innerHTML = '<div style="font-size:0.8rem; color:#6b7280; padding:5px;">Nenhuma luva obtida ainda.</div>';
+            } else {
+                const pesosRaridade = { "comum": 1, "rara": 2, "epica": 3, "mitica": 4 };
+                const luvasOrdenadas = [...luvasDesbloqueadas].sort((a, b) => {
+                    let pesoA = pesosRaridade[a.raridade] || 1;
+                    let pesoB = pesosRaridade[b.raridade] || 1;
+                    return pesoA - pesoB;
+                });
+
+                luvasOrdenadas.forEach(gl => {
+                    const isEquipped = luvaEquipada && luvaEquipada.id === gl.id;
+                    const div = document.createElement('div'); 
+                    div.className = `style-item ${isEquipped ? 'equipped' : ''} raridade-${gl.raridade || 'comum'}`;
+                    div.innerHTML = `
+                        <div>
+                            <strong>${gl.nome}</strong><br>
+                            <span style="font-size:0.7rem; color:#9ca3af;">💥+${gl.danoBonus} ❤️+${gl.hpBonus} 💨+${Math.round(gl.esquivaBonus*100)}%</span>
+                        </div> 
+                        ${!isEquipped ? `<button class="style-select-btn" onclick="equiparLuva('${gl.id}')">EQUIPAR</button>` : '<span>EM USO</span>'}
+                    `;
+                    glovesContainer.appendChild(div);
+                });
+            }
+
+            const girlsContainer = document.getElementById('unlocked-girls-list'); girlsContainer.innerHTML = '';
+            if(mulheresDesbloqueadas.length === 0) girlsContainer.innerHTML = '<div style="font-size:0.8rem; color:#6b7280; padding:5px;">Vença lutas para atrair apoiadoras para o corner.</div>';
+            mulheresDesbloqueadas.forEach(gr => {
+                const isEquipped = mulherEquipada && mulherEquipada.nome === gr.nome;
+                const div = document.createElement('div'); div.className = `style-item ${isEquipped ? 'equipped' : ''}`;
+                div.innerHTML = `<div><strong>👑 ${gr.nome}</strong><br><span style="font-size:0.7rem; color:#a855f7;">${gr.efeito}</span></div> ${!isEquipped ? `<button class="style-select-btn" onclick="equiparMulher('${gr.nome}')">CHAMAR</button>` : '<span>NO CORNER</span>'}`;
+                girlsContainer.appendChild(div);
+            });
+
+            const revancheContainer = document.getElementById('defeated-opponents-list'); revancheContainer.innerHTML = '';
+            let totalDerrotados = progressoCarreira - 1;
+            if(totalDerrotados === 0) {
+                revancheContainer.innerHTML = '<div style="font-size:0.8rem; color:#6b7280; padding:5px;">Derrote oponentes no Modo Vencedor para liberar revanches.</div>';
+            } else {
+                for(let k = 0; k < totalDerrotados; k++) {
+                    const opp = INIMIGOS_VENCEDOR[k];
+                    const div = document.createElement('div'); div.className = 'style-item';
+                    div.style.borderLeft = '4px solid #ef4444';
+                    div.innerHTML = `<div><strong>${opp.nome}</strong><br><span style="font-size:0.7rem; color:#9ca3af;">Estilo: ${opp.estilo}</span></div><button class="style-select-btn" style="background:#ff4a5a; color:white;" onclick="mostrarFaseRevanche(${opp.index})">REVANCHE</button>`;
+                    revancheContainer.appendChild(div);
+                }
+            }
+            
+            if(progressoCarreira <= 30) {
+                const nextOpp = INIMIGOS_VENCEDOR[progressoCarreira - 1]; 
+                let configEstiloAlvo = ESTILOS[nextOpp.estilo] || { raridade: 'comum' };
+                let labelRaridadeLuva = obterLabelRaridade(nextOpp.luva.raridade);
+                let labelRaridadeEstilo = obterLabelRaridade(configEstiloAlvo.raridade);
+                document.getElementById('next-opp-card').innerHTML = `<strong style="color:#ef4444;">PRÓXIMO ADVERSÁRIO (${progressoCarreira}/30):</strong><div style="font-weight:bold;">${nextOpp.nome}</div><div style="font-size:0.85rem; color:#9ca3af;">Estilo: <span class="rarity-${configEstiloAlvo.raridade}">${nextOpp.estilo}</span> ${labelRaridadeEstilo}<br>🥊 Drop de Luva: <span class="rarity-${nextOpp.luva.raridade}">${nextOpp.luva.nome}</span> ${labelRaridadeLuva}</div>`;
+            } else { document.getElementById('next-opp-card').innerHTML = "<strong>🏆 JORNADA COMPLETA! VOCÊ É O DEUS DA ARENA! 🏆</strong>"; }
+        }
+
+        function equiparEstilo(nomeEstilo) { player.estilo = nomeEstilo; atualizarHubCarreira(); salvarJogo(true); }
+        function equiparLuva(idLuva) { luvaEquipada = luvasDesbloqueadas.find(g => g.id === idLuva); atualizarHubCarreira(); salvarJogo(true); }
+        function equiparMulher(nomeM) { mulherEquipada = mulheresDesbloqueadas.find(g => g.nome === nomeM); atualizarHubCarreira(); salvarJogo(true); }
+
+        function sortearLuvaPorPorcentagem() {
+            let rng = Math.random() * 100; let alvoRaridade = "comum";
+            if (rng < 2) alvoRaridade = "mitica"; else if (rng < 10) alvoRaridade = "epica"; else if (rng < 30) alvoRaridade = "rara"; else alvoRaridade = "comum";
+            let opcoes = INIMIGOS_VENCEDOR.map(i => i.luva).filter(l => l.raridade === alvoRaridade);
+            return opcoes[Math.floor(Math.random() * opcoes.length)];
+        }
+
+        function abrirRoleta() {
+            if(player.moedas < 50) return alert("Moedas insuficientes! Cada giro custa 50 moedas de ouro.");
+            player.moedas -= 50; let luvaSorteada = JSON.parse(JSON.stringify(sortearLuvaPorPorcentagem())); let jaTinha = luvasDesbloqueadas.some(g => g.id === luvaSorteada.id);
+            if(!jaTinha) luvasDesbloqueadas.push(luvaSorteada);
+            atualizarHubCarreira(); salvarJogo(true);
+            
+            document.getElementById('modal-title').innerText = "🎰 GIRO DA ROLETA!";
+            document.getElementById('modal-text').innerText = jaTinha ? `Você tirou uma duplicata das [${luvaSorteada.nome}], convertida em experiência de treino!` : "Você gastou 50 moedas e a roleta parou...";
+            document.getElementById('modal-reward-box').style.display = 'none'; document.getElementById('modal-girl-box').style.display = 'none'; document.getElementById('modal-changelog-box').style.display = 'none'; document.getElementById('modal-tutorial-box').style.display = 'none';
+            
+            const gBox = document.getElementById('modal-glove-box');
+            document.getElementById('glove-rarity-title').innerText = `Luva Adquirida! Raridade: ${luvaSorteada.raridade.toUpperCase()}`;
+            document.getElementById('glove-rarity-title').className = `rarity-${luvaSorteada.raridade}`;
+            document.getElementById('modal-glove-name').innerText = luvaSorteada.nome;
+            document.getElementById('modal-glove-stats').innerText = `💥 Dano: +${luvaSorteada.danoBonus} | ❤️ Vida: +${luvaSorteada.hpBonus} | 💨 Desvio: +${Math.round(luvaSorteada.esquivaBonus*100)}%`;
+            gBox.style.display = 'block'; document.getElementById('outcome-modal').style.display = 'flex';
+        }
+        
+        function mostrarFaseDialogo() {
+            if(progressoCarreira > 30) return alert("Você já completou a jornada!");
+            modoAtual = 'vencedor'; const dadosInimigo = INIMIGOS_VENCEDOR[progressoCarreira - 1];
+            document.getElementById('dial-speaker-name').innerText = dadosInimigo.nome;
+            document.getElementById('dial-speaker-text').innerText = dadosInimigo.dialogo;
+            mudarTela('screen-dialogue');
+        }
+
+        function mostrarFaseRevanche(indexInimigo) {
+            modoAtual = 'revanche'; idRevancheAtual = indexInimigo;
+            const dadosInimigo = INIMIGOS_VENCEDOR[indexInimigo];
+            document.getElementById('dial-speaker-name').innerText = `${dadosInimigo.nome} (Revanche)`;
+            document.getElementById('dial-speaker-text').innerText = `"${dadosInimigo.dialogo.replace(/"/g, '')} Acha que pode me vencer de novo?!"`;
+            mudarTela('screen-dialogue');
+        }
+
+        function retornarDoDialogo() { if(modoAtual === 'vencedor' || modoAtual === 'revanche') mudarTela('screen-hub'); else voltarParaMenuGeral(); }
+
+        function confirmarEIrPraLuta() {
+            const dadosInimigo = (modoAtual === 'revanche') ? INIMIGOS_VENCEDOR[idRevancheAtual] : ((modoAtual === 'vencedor') ? INIMIGOS_VENCEDOR[progressoCarreira - 1] : enemy);
+            const configStyle = ESTILOS[player.estilo] || ESTILOS['Básico'];
+            
+            let bHp = luvaEquipada ? luvaEquipada.hpBonus : 0;
+            player.hpMax = configStyle.hpMax + bHp; player.hp = player.hpMax; player.defMax = configStyle.defMax; player.def = configStyle.defMax;
+            player.stamina = 100;
+            player.sp = player.dificuldade === 'facil' ? 50 : 0;
+            if(mulherEquipada && mulherEquipada.tipo === 'sp') player.sp += mulherEquipada.valor;
+            
+            if(modoAtual === 'vencedor' || modoAtual === 'revanche') {
+                let hpMod = player.dificuldade === 'facil' ? 0.8 : player.dificuldade === 'dificil' ? 1.35 : 1.0;
+                let finalHp = Math.floor(dadosInimigo.hp * hpMod);
+                enemy = { name: dadosInimigo.nome, estilo: dadosInimigo.estilo, hp: finalHp, hpMax: finalHp, def: dadosInimigo.def, defMax: dadosInimigo.def, stamina: 100, originalIndex: dadosInimigo.index };
+            } else if (modoAtual === 'rapida') {
+                let eStyle = ESTILOS[enemy.estilo] || ESTILOS['Básico'];
+                let ebHp = enemyLuva ? enemyLuva.hpBonus : 0;
+                enemy.hpMax = eStyle.hpMax + ebHp;
+                enemy.hp = enemy.hpMax;
+                enemy.def = eStyle.defMax;
+                enemy.defMax = eStyle.defMax;
+                enemy.stamina = 100;
+            }
+            configureScreenCombate();
+        }
+
+        function irParaSelecaoRapida() {
+            modoAtual = 'rapida';
+            const s1 = document.getElementById('r-p1-style'); const g1 = document.getElementById('r-p1-glove');
+            const s2 = document.getElementById('r-p2-style'); const g2 = document.getElementById('r-p2-glove');
+            
+            s1.innerHTML = ''; s2.innerHTML = ''; g1.innerHTML = '<option value="nenhuma">Nenhuma Luva</option>'; g2.innerHTML = '<option value="nenhuma">Nenhuma Luva</option>';
+            
+            Object.keys(ESTILOS).forEach(st => {
+                s1.innerHTML += `<option value="${st}">${st}</option>`; s2.innerHTML += `<option value="${st}">${st}</option>`;
+            });
+
+            let todasLuvas = [];
+            INIMIGOS_VENCEDOR.forEach(i => {
+                if(i.luva && !todasLuvas.some(l => l.id === i.luva.id)) { todasLuvas.push(i.luva); }
+            });
+
+            todasLuvas.forEach(l => {
+                let rText = l.raridade === 'mitica' ? '⭐ ' : '';
+                g1.innerHTML += `<option value="${l.id}">${rText}${l.nome}</option>`;
+                g2.innerHTML += `<option value="${l.id}">${rText}${l.nome}</option>`;
+            });
+
+            mudarTela('screen-selecao-rapida');
+        }
+
+        function confirmarLutaRapida() {
+            let pStyleSel = document.getElementById('r-p1-style').value;
+            let pGloveSel = document.getElementById('r-p1-glove').value;
+            let eStyleSel = document.getElementById('r-p2-style').value;
+            let eGloveSel = document.getElementById('r-p2-glove').value;
+
+            let todasLuvas = [];
+            INIMIGOS_VENCEDOR.forEach(i => { if(i.luva) todasLuvas.push(i.luva); });
+
+            luvaEquipada = todasLuvas.find(l => l.id === pGloveSel) || null;
+            enemyLuva = todasLuvas.find(l => l.id === eGloveSel) || null;
+            mulherEquipada = null; 
+
+            player = { name: "Jogador", nat: "Brasil", hp: 100, hpMax: 100, def: 50, defMax: 50, stamina: 100, sp: 0, estilo: pStyleSel, dificuldade: 'medio', moedas: 0, pocaoSorte: false };
+            enemy = { name: "Adversário Rápido", estilo: eStyleSel, hp: 100, hpMax: 100, def: 50, stamina: 100, originalIndex: -1 };
+
+            document.getElementById('dial-speaker-name').innerText = enemy.name;
+            document.getElementById('dial-speaker-text').innerText = '"A arena está pronta! Que vença o melhor estilo!"';
+            mudarTela('screen-dialogue');
+        }
+
+        function abrirModalGeral() {
+            document.getElementById('outcome-modal').style.display = 'flex';
+        }
+
+        function fecharModalGeral() {
+            document.getElementById('outcome-modal').style.display = 'none';
+            if (modoAtual === 'versus') {
+                mudarTela('screen-selecao-versus');
+            } else if (modoAtual === 'vencedor' || modoAtual === 'revanche') {
+                atualizarHubCarreira();
+                mudarTela('screen-hub');
+            } else {
+                mudarTela('screen-menu');
+            }
+        }
+
+        function exibirModalResultadoGeral(vitoria, isVersus = false) {
+            const mTitle = document.getElementById('modal-title');
+            const mText = document.getElementById('modal-text');
+            const rBox = document.getElementById('modal-reward-box');
+            const gBox = document.getElementById('modal-glove-box');
+            const grBox = document.getElementById('modal-girl-box');
+            const cBox = document.getElementById('modal-changelog-box');
+            const tBox = document.getElementById('modal-tutorial-box');
+
+            rBox.style.display = 'none'; gBox.style.display = 'none'; grBox.style.display = 'none'; cBox.style.display = 'none'; tBox.style.display = 'none';
+
+            if (isVersus) {
+                mTitle.innerText = "FIM DE DUELO!";
+                mText.innerText = vitoria;
+                abrirModalGeral();
+                return;
+            }
+
+            if (vitoria) {
+                mTitle.innerText = "🏆 VITÓRIA IMPRESSIONANTE!";
+                let baseCoins = Math.floor(Math.random() * 6) + 10;
+                if (mulherEquipada && mulherEquipada.tipo === 'moeda') baseCoins = Math.floor(baseCoins * mulherEquipada.valor);
+                player.moedas += baseCoins;
+                mText.innerText = `Você superou o desafio com maestria e coletou ${baseCoins} moedas de ouro para seu cofre!`;
+
+                if (modoAtual === 'vencedor' || modoAtual === 'revanche') {
+                    const dadosInimigo = INIMIGOS_VENCEDOR[enemy.originalIndex];
+                    let itemAdquiridoNestaLuta = false;
+                    
+                    // Multiplicador de Sorte (2x se a poção estiver ativa)
+                    let multSorte = player.pocaoSorte ? 2 : 1;
+
+                    // === SISTEMA: CHANCE DE DROP DE ESTILOS POR RARIDADE ===
+                    if (!estilosDesbloqueados.includes(dadosInimigo.estilo)) {
+                        let configEstilo = ESTILOS[dadosInimigo.estilo] || { raridade: 'comum' };
+                        let estiloDropChance = 0.40; // Comum base
+                        
+                        if (configEstilo.raridade === 'rara') estiloDropChance = 0.25;
+                        else if (configEstilo.raridade === 'epica') estiloDropChance = 0.12;
+                        else if (configEstilo.raridade === 'mitica') estiloDropChance = 0.02;
+
+                        // Aplica a poção de sorte
+                        estiloDropChance = estiloDropChance * multSorte;
+
+                        if (Math.random() < estiloDropChance) {
+                            estilosDesbloqueados.push(dadosInimigo.estilo);
+                            document.getElementById('reward-rarity-title').innerText = `🥋 Novo Estilo Copiado! Raridade: ${configEstilo.raridade.toUpperCase()}`;
+                            document.getElementById('reward-rarity-title').className = `rarity-${configEstilo.raridade}`;
+                            document.getElementById('modal-reward-name').innerText = `${dadosInimigo.estilo}`;
+                            rBox.style.display = 'block';
+                            itemAdquiridoNestaLuta = true;
+                        }
+                    }
+
+                    // Chance de Drop de Luvas
+                    let dropChance = 0.40; 
+                    if (dadosInimigo.luva.raridade === "mitica") {
+                        dropChance = 0.02; 
+                    }
+
+                    // Aplica a poção de sorte
+                    dropChance = dropChance * multSorte;
+
+                    if (Math.random() < dropChance) {
+                        let jaTemLuva = luvasDesbloqueadas.some(g => g.id === dadosInimigo.luva.id);
+                        if (!jaTemLuva) {
+                            let luvaDropada = JSON.parse(JSON.stringify(dadosInimigo.luva));
+                            luvaDropada.rarity = dadosInimigo.luva.raridade;
+
+                            luvasDesbloqueadas.push(luvaDropada);
+                            document.getElementById('glove-rarity-title').innerText = `Nova Luva Dropada! Raridade: ${luvaDropada.rarity.toUpperCase()}`;
+                            document.getElementById('glove-rarity-title').className = `rarity-${luvaDropada.rarity}`;
+                            document.getElementById('modal-glove-name').innerText = luvaDropada.nome;
+                            document.getElementById('modal-glove-stats').innerText = `💥 Dano: +${luvaDropada.danoBonus} | ❤️ Vida: +${luvaDropada.hpBonus} | 💨 Desvio: +${Math.round(luvaDropada.esquivaBonus*100)}%`;
+                            gBox.style.display = 'block';
+                            itemAdquiridoNestaLuta = true;
+                        }
+                    }
+
+                    // Se a poção estava ativa e conseguimos copiar o estilo ou dropar a luva, consome o efeito
+                    if (player.pocaoSorte && itemAdquiridoNestaLuta) {
+                        player.pocaoSorte = false;
+                    }
+
+                    if (modoAtual === 'vencedor' && progressoCarreira % 5 === 0 && mulheresDesbloqueadas.length < BANCO_MULHERES.length) {
+                        let proximaMulher = BANCO_MULHERES[mulheresDesbloqueadas.length];
+                        mulheresDesbloqueadas.push(proximaMulher);
+                        document.getElementById('modal-girl-name').innerText = proximaMulher.nome;
+                        document.getElementById('modal-girl-buff').innerText = proximaMulher.efeito;
+                        grBox.style.display = 'block';
+                    }
+
+                    if (modoAtual === 'vencedor') {
+                        progressoCarreira++;
+                    }
+                    salvarJogo(true);
+                }
+            } else {
+                mTitle.innerText = "❌ DERROTA NA ARENA";
+                mText.innerText = "Você caiu em combate. Ajuste seus equipamentos, treine na roleta e tente novamente!";
+            }
+            abrirModalGeral();
+        }
+
+        function configureScreenCombate() {
+            document.getElementById('combat-player-name').innerText = player.name;
+            document.getElementById('combat-player-style').innerText = `(${player.estilo})`;
+            document.getElementById('combat-player-gear').innerText = `${luvaEquipada ? '🥊 ' + luvaEquipada.nome : ''} ${mulherEquipada ? '👑 Corner: ' + mulherEquipada.nome : ''}`;
+            document.getElementById('combat-enemy-name').innerText = enemy.name;
+            document.getElementById('combat-enemy-style').innerText = `(${enemy.estilo})`;
+            document.getElementById('combat-enemy-gear').innerText = `${modoAtual === 'rapida' && enemyLuva ? '🥊 ' + enemyLuva.nome : ''}`;
+            document.getElementById('p-hp-max').innerText = player.hpMax; document.getElementById('p-def-max').innerText = player.defMax;
+            document.getElementById('e-hp-max').innerText = enemy.hpMax;
+            
+            if (modoAtual === 'vencedor') document.getElementById('combat-mode-title').innerText = `DESAFIO: LUTA ${progressoCarreira}`;
+            else if (modoAtual === 'revanche') document.getElementById('combat-mode-title').innerText = "🥋 MODO REVANCHE";
+            else document.getElementById('combat-mode-title').innerText = "LUTA RÁPIDA";
+
+            updatingBarsSolo(); mudarTela('screen-combat');
+        }
+
+        function updatingBarsSolo() {
+            let pStyle = ESTILOS[player.estilo] || ESTILOS['Básico'];
+            document.getElementById('btn-atk-1').innerText = `1. ${pStyle.g1} (⚡${pStyle.costG1 || 15})`;
+            document.getElementById('btn-atk-2').innerText = `2. ${pStyle.g2} (⚡${pStyle.costG2 || 25})`;
+            document.getElementById('btn-atk-3').innerText = `3. ${pStyle.g3} (+⚡)`;
+            document.getElementById('btn-atk-4').innerText = `4. ${pStyle.g4}`;
+            
+            if(player.sp >= 100) {
+                document.getElementById('btn-especial').innerText = `6. ${pStyle.espNome.toUpperCase()}! (⚡${pStyle.costEsp || 40})`;
+            }
+
+            document.getElementById('p-hp').style.width = Math.max(0, (player.hp / player.hpMax * 100)) + '%';
+            document.getElementById('p-hp-text').innerText = Math.max(0, player.hp);
+            document.getElementById('e-hp').style.width = Math.max(0, (enemy.hp / enemy.hpMax * 100)) + '%';
+            document.getElementById('e-hp-text').innerText = Math.max(0, enemy.hp);
+            document.getElementById('p-def').style.width = Math.max(0, (player.def / player.defMax * 100)) + '%';
+            document.getElementById('p-def-text').innerText = Math.max(0, player.def);
+            
+            document.getElementById('p-stamina').style.width = player.stamina + '%';
+            document.getElementById('p-stamina-text').innerText = player.stamina;
+            document.getElementById('e-stamina').style.width = enemy.stamina + '%';
+            document.getElementById('e-stamina-text').innerText = enemy.stamina;
+            
+            document.getElementById('p-sp').style.width = player.sp + '%';
+            document.getElementById('sp-text').innerText = Math.round(player.sp);
+            document.getElementById('btn-cenario').style.display = (player.hp < 45 && player.hp > 0) ? 'block' : 'none';
+            document.getElementById('btn-especial').style.display = (player.sp >= 100) ? 'block' : 'none';
+        }
+
+        function acaoCombate(opcao) {
+            let logDiv = document.getElementById('log'); logDiv.innerHTML = "";
+            let pStyle = ESTILOS[player.estilo] || ESTILOS['Básico'];
+            let eStyle = ESTILOS[enemy.estilo] || ESTILOS['Básico'];
+            
+            if(mulherEquipada && mulherEquipada.tipo === 'cura' && player.hp > 0) {
+                player.hp = Math.min(player.hpMax, player.hp + mulherEquipada.valor);
+                logDiv.innerHTML += `💖 Corner [${mulherEquipada.nome}] curou +${mulherEquipada.valor} HP.<br>`;
+            }
+
+            let gearAtk = luvaEquipada ? luvaEquipada.danoBonus : 0;
+            let gearEsquiva = luvaEquipada ? luvaEquipada.esquivaBonus : 0;
+            let girlEsquiva = (mulherEquipada && mulherEquipada.tipo === 'esquiva') ? mulherEquipada.valor : 0;
+
+            let enemyGearAtk = (modoAtual === 'rapida' && enemyLuva) ? enemyLuva.danoBonus : 0;
+            let enemyGearEsquiva = (modoAtual === 'rapida' && enemyLuva) ? enemyLuva.esquivaBonus : 0;
+
+            let danoDado = 0; 
+            let danoTomado = Math.floor(Math.random() * 10) + 6 + enemyGearAtk;
+            let diffDanoMod = player.dificuldade === 'facil' ? 0.7 : player.dificuldade === 'dificil' ? 1.4 : 1.0;
+            danoTomado = Math.floor(danoTomado * eStyle.danoMult * diffDanoMod);
+            
+            let costG1 = pStyle.costG1 || 15;
+            let costG2 = pStyle.costG2 || 25;
+            let costEsp = pStyle.costEsp || 40;
+            
+            let tipoReacao = 'achou_ruim';
+            let golpeNome = "";
+            let ehEspecial = false;
+            let defendendoAtivo = false;
+
+            if (opcao === 1 && player.stamina < costG1) { logDiv.innerHTML = "❌ Sem Stamina suficiente para o Golpe 1! Recupere defendendo."; return; }
+            if (opcao === 2 && player.stamina < costG2) { logDiv.innerHTML = "❌ Sem Stamina suficiente para o Golpe 2! Recupere defendendo."; return; }
+            if (opcao === 6 && player.stamina < costEsp) { logDiv.innerHTML = "❌ Sem Stamina suficiente para o Especial! Recupere defendendo."; return; }
+
+            if(opcao === 1) { 
+                player.stamina -= costG1;
+                golpeNome = pStyle.g1;
+                danoDado = 12 + gearAtk; if(player.estilo === 'Boxe') danoDado += 6; 
+                danoDado = Math.floor(danoDado * pStyle.danoMult); 
+                logDiv.innerHTML += `⚔️ Usou [${golpeNome}]! Ataca com ${danoDado} de dano.<br>`; 
+                tipoReacao = 'achou_ruim';
+            }
+            if(opcao === 2) { 
+                player.stamina -= costG2;
+                golpeNome = pStyle.g2;
+                danoDado = Math.floor((23 + gearAtk) * pStyle.danoMult); 
+                logDiv.innerHTML += `💥 Avanço com [${golpeNome}]! Golpe causou ${danoDado}.<br>`; 
+                tipoReacao = 'achou_ruim';
+            }
+            if(opcao === 3) { 
+                golpeNome = pStyle.g3;
+                player.def = player.defMax; danoTomado = Math.floor(danoTomado * 0.2); 
+                player.stamina = Math.min(100, player.stamina + 25); 
+                logDiv.innerHTML += `🛡️ Movimento de [${golpeNome}] efetuado! Escudo erguido e +25 Stamina.<br>`; 
+                tipoReacao = 'bloqueado';
+                defendendoAtivo = true;
+            }
+            if(opcao === 4) { 
+                golpeNome = pStyle.g4;
+                let chanceTotal = pStyle.esquiva + gearEsquiva + girlEsquiva;
+                if(Math.random() < chanceTotal) { 
+                    danoTomado = 0; danoDado = Math.floor((12 + gearAtk) * pStyle.danoMult); 
+                    logDiv.innerHTML += `💨 Esquivou usando [${golpeNome}] e deu contra-ataque de ${danoDado}!<br>`; 
+                    tipoReacao = 'achou_ruim';
+                } else { 
+                    logDiv.innerHTML += `❌ Perdeu o tempo do [${golpeNome}]! Tomou o golpe em cheio.<br>`; 
+                    tipoReacao = 'zuar_cara';
+                } 
+            }
+            if(opcao === 5) { 
+                golpeNome = "Objeto do Cenário";
+                danoDado = 35 + gearAtk; 
+                logDiv.innerHTML += `📦 Golpe improvisado com objeto! Causou ${danoDado}.<br>`; 
+                tipoReacao = 'objeto';
+            }
+            if(opcao === 6) { 
+                player.stamina -= costEsp;
+                golpeNome = pStyle.espNome;
+                danoDado = Math.floor(pStyle.espDanoBase + gearAtk); 
+                player.sp = 0; 
+                logDiv.innerHTML += `🔥 SUPREMO: [${golpeNome}]! Dano catastrófico de ${danoDado}!<br>`; 
+                ehEspecial = true;
+            }
+
+            let enemyEvasionChance = eStyle.esquiva + enemyGearEsquiva;
+            if((opcao === 1 || opcao === 2 || opcao === 5) && Math.random() < enemyEvasionChance && opcao !== 4) {
+                 enemy.hp -= 0;
+                 logDiv.innerHTML = `💨 Oponente realizou um desvio ágil e anulou o seu ataque!<br>`;
+            } else {
+                 enemy.hp -= danoDado;
+            }
+            
+            if(!ehEspecial && enemy.hp > 0) player.sp += danoDado * 1.6;
+            if(player.sp > 100) player.sp = 100;
+
+            if(enemy.hp > 0 && danoTomado > 0) {
+                let eCostG1 = eStyle.costG1 || 15;
+                let eCostG2 = eStyle.costG2 || 25;
+                
+                if (enemy.stamina >= eCostG2 && Math.random() > 0.5) {
+                    enemy.stamina -= eCostG2;
+                    logDiv.innerHTML += `🥊 Oponente respondeu forte usando [${eStyle.g2}] causando ${danoTomado} de dano.<br>`;
+                } else if (enemy.stamina >= eCostG1) {
+                    enemy.stamina -= eCostG1;
+                    danoTomado = Math.floor(danoTomado * 0.65);
+                    logDiv.innerHTML += `🥊 Oponente golpeou rápido com [${eStyle.g1}] causando ${danoTomado} de dano.<br>`;
+                } else {
+                    enemy.stamina = Math.min(100, enemy.stamina + 25); 
+                    danoTomado = 0;
+                    logDiv.innerHTML += `🛡️ Oponente estava cansado e focou em respirar para recuperar Stamina!`;
+                }
+
+                if(enemy.estilo === 'Instinto Superior' && Math.random() < 0.35 && danoTomado > 0) { 
+                    logDiv.innerHTML += `<br>👁️ Oponente usou desvio do Instinto Superior!`; 
+                    danoTomado = Math.floor(danoTomado * 0.4); 
+                }
+                
+                if(danoTomado > 0) {
+                    player.hp -= danoTomado; 
+                    if(defendendoAtivo) {
+                        player.stamina = Math.min(100, player.stamina + 15); 
+                        logDiv.innerHTML += `<br>⚡ Bloqueio perfeito! Convertido em +15 de Stamina extra.`;
+                    }
+                }
+            }
+
+            updatingBarsSolo();
+            
+            if(ehEspecial) {
+                abrirQuadroFrase(player.name, pStyle.fraseAtk, true, function() {
+                    abrirQuadroFrase(enemy.name, pStyle.fraseOpo, false, function() {
+                        if(enemy.hp <= 0) { exibirModalResultadoGeral(true, false); } 
+                        else if(player.hp <= 0) { exibirModalResultadoGeral(false, false); }
+                    });
+                });
+            } else {
+                let fraseFinal = gerarFraseOponente(tipoReacao, golpeNome, player.estilo);
+                abrirQuadroFrase(enemy.name, fraseFinal, false, function() {
+                    if(enemy.hp <= 0) { exibirModalResultadoGeral(true, false); } 
+                    else if(player.hp <= 0) { exibirModalResultadoGeral(false, false); }
+                });
+            }
+        }
+
+        function irParaSelecaoVersus() {
+            const s1 = document.getElementById('v-p1-select'); const s2 = document.getElementById('v-p2-select');
+            s1.innerHTML = ''; s2.innerHTML = '';
+            Object.keys(ESTILOS).forEach(st => {
+                s1.innerHTML += `<option value="${st}">${st}</option>`; s2.innerHTML += `<option value="${st}">${st}</option>`;
+            });
+            mudarTela('screen-selecao-versus');
+        }
+
+        function iniciarCombateVersus() {
+            vp1.name = document.getElementById('v-p1-input').value.trim() || "Player 1"; vp1.estilo = document.getElementById('v-p1-select').value;
+            vp2.name = document.getElementById('v-p2-input').value.trim() || "Player 2"; vp2.estilo = document.getElementById('v-p2-select').value;
+            let st1 = ESTILOS[vp1.estilo]; let st2 = ESTILOS[vp2.estilo];
+            vp1.hpMax = st1.hpMax; vp1.hp = st1.hpMax; vp1.defMax = st1.defMax; vp1.def = st1.defMax; vp1.sp = 0; vp1.stamina = 100; vp1.defendendo = false;
+            vp2.hpMax = st2.hpMax; vp2.hp = st2.hpMax; vp2.defMax = st2.defMax; vp2.def = st2.defMax; vp2.sp = 0; vp2.stamina = 100; vp2.defendendo = false;
+
+            document.getElementById('v-p1-name-lbl').innerText = vp1.name; document.getElementById('v-p1-style-lbl').innerText = `(${vp1.estilo})`;
+            document.getElementById('v-p2-name-lbl').innerText = vp2.name; document.getElementById('v-p2-style-lbl').innerText = `(${vp2.estilo})`;
+
+            document.getElementById('p1-b1').innerText = `${st1.g1} (⚡${st1.costG1 || 15})`; 
+            document.getElementById('p1-b2').innerText = `${st1.g2} (⚡${st1.costG2 || 25})`; 
+            document.getElementById('p1-b3').innerText = `${st1.g3} (+⚡)`; 
+            document.getElementById('p1-b4').innerText = st1.g4;
+            
+            document.getElementById('p2-b1').innerText = `${st2.g1} (⚡${st2.costG1 || 15})`; 
+            document.getElementById('p2-b2').innerText = `${st2.g2} (⚡${st2.costG2 || 25})`; 
+            document.getElementById('p2-b3').innerText = `${st2.g3} (+⚡)`; 
+            document.getElementById('p2-b4').innerText = st2.g4;
+            
+            document.getElementById('p1-b6').innerText = `💥 ${st1.espNome.toUpperCase()} (⚡${st1.costEsp || 40})`;
+            document.getElementById('p2-b6').innerText = `💥 ${st2.espNome.toUpperCase()} (⚡${st2.costEsp || 40})`;
+
+            document.getElementById('log-versus').innerHTML = "🔥 COMBATE INICIADO!<br>Que o duelo comece.";
+            turnoVersus = 1; modoAtual = 'versus'; atualizarPaineisVersus(); mudarTela('screen-arena-versus');
+        }
+
+        function atualizarPaineisVersus() {
+            document.getElementById('v-p1-hp-bar').style.width = (vp1.hp / vp1.hpMax * 100) + '%'; document.getElementById('v-p1-hp-txt').innerText = Math.max(0, vp1.hp);
+            document.getElementById('v-p1-def-bar').style.width = (vp1.def / vp1.defMax * 100) + '%'; document.getElementById('v-p1-def-txt').innerText = Math.max(0, vp1.def);
+            document.getElementById('v-p1-stamina-bar').style.width = vp1.stamina + '%'; document.getElementById('v-p1-stamina-txt').innerText = vp1.stamina;
+            document.getElementById('v-p1-sp-bar').style.width = vp1.sp + '%'; document.getElementById('p1-b6').style.display = (vp1.sp >= 100) ? 'block' : 'none';
+
+            document.getElementById('v-p2-hp-bar').style.width = (vp2.hp / vp2.hpMax * 100) + '%'; document.getElementById('v-p2-hp-txt').innerText = Math.max(0, vp2.hp);
+            document.getElementById('v-p2-def-bar').style.width = (vp2.def / vp2.defMax * 100) + '%'; document.getElementById('v-p2-def-txt').innerText = Math.max(0, vp2.def);
+            document.getElementById('v-p2-stamina-bar').style.width = vp2.stamina + '%'; document.getElementById('v-p2-stamina-txt').innerText = vp2.stamina;
+            document.getElementById('v-p2-sp-bar').style.width = vp2.sp + '%'; document.getElementById('p2-b6').style.display = (vp2.sp >= 100) ? 'block' : 'none';
+
+            document.getElementById('current-turn-display').innerText = (turnoVersus === 1) ? vp1.name : vp2.name;
+            document.getElementById('current-turn-display').style.color = (turnoVersus === 1) ? '#3b82f6' : '#ff4a5a';
+
+            document.querySelectorAll('#actions-p1 button').forEach(b => b.disabled = (turnoVersus !== 1));
+            document.querySelectorAll('#actions-p2 button').forEach(b => b.disabled = (turnoVersus !== 2));
+        }
+
+        function rodarTurnoVersus(opcao) {
+            let atacante = (turnoVersus === 1) ? vp1 : vp2;
+            let defensor = (turnoVersus === 1) ? vp2 : vp1;
+            let stAtk = ESTILOS[atacante.estilo];
+            let logV = document.getElementById('log-versus');
+            
+            let costG1 = stAtk.costG1 || 15;
+            let costG2 = stAtk.costG2 || 25;
+            let costEsp = stAtk.costEsp || 40;
+
+            if (opcao === 1 && atacante.stamina < costG1) return alert("Sem stamina!");
+            if (opcao === 2 && atacante.stamina < costG2) return alert("Sem stamina!");
+            if (opcao === 6 && atacante.stamina < costEsp) return alert("Sem stamina!");
+
+            let dano = 0;
+
+            if (opcao === 1) {
+                atacante.stamina -= costG1;
+                dano = Math.floor((12) * stAtk.danoMult);
+                if(defensor.defendendo) dano = Math.floor(dano * 0.3);
+                defensor.hp -= dano;
+                atacante.sp = Math.min(100, atacante.sp + dano * 1.5);
+                logV.innerHTML = `⚔️ ${atacante.name} desferiu ${stAtk.g1} causando ${dano} de dano!`;
+                defensor.defendendo = false;
+            }
+            else if (opcao === 2) {
+                atacante.stamina -= costG2;
+                dano = Math.floor((24) * stAtk.danoMult);
+                if(defensor.defendendo) dano = Math.floor(dano * 0.3);
+                defensor.hp -= dano;
+                atacante.sp = Math.min(100, atacante.sp + dano * 1.5);
+                logV.innerHTML = `💥 ${atacante.name} avançou com ${stAtk.g2} aplicando ${dano} de dano!`;
+                defensor.defendendo = false;
+            }
+            else if (opcao === 3) {
+                atacante.def = atacante.defMax;
+                atacante.stamina = Math.min(100, atacante.stamina + 25); 
+                atacante.defendendo = true;
+                logV.innerHTML = `🛡️ ${atacante.name} entrou em postura defensiva de ${stAtk.g3} (+Stamina)!`;
+            }
+            else if (opcao === 4) {
+                defensor.defendendo = false;
+                if (Math.random() < stAtk.esquiva) {
+                    dano = Math.floor(10 * stAtk.danoMult);
+                    defensor.hp -= dano;
+                    logV.innerHTML = `💨 ${atacante.name} usou desvio perfeito e contra-atacou com ${dano} de dano!`;
+                } else {
+                    logV.innerHTML = `❌ ${atacante.name} tentou esquivar mas falhou na movimentação.`;
+                }
+            }
+            else if (opcao === 6) {
+                atacante.stamina -= costEsp;
+                dano = Math.floor(stAtk.espDanoBase * stAtk.danoMult);
+                if(defensor.defendendo) dano = Math.floor(dano * 0.3);
+                defensor.hp -= dano;
+                atacante.sp = 0;
+                logV.innerHTML = `🔥 SUPREMO: ${atacante.name} descarregou o golpe ${stAtk.espNome} colossal de ${dano} de dano!`;
+                defensor.defendendo = false;
+            }
+
+            if (defensor.hp <= 0) {
+                atualizarPaineisVersus();
+                setTimeout(() => {
+                    exibirModalResultadoGeral(`🏆 O grande campeão do duelo foi ${atacante.name}!`, true);
+                }, 500);
+                return;
+            }
+
+            turnoVersus = (turnoVersus === 1) ? 2 : 1;
+            atualizarPaineisVersus();
+        }
+    </script>
+</body>
+</html>
